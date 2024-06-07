@@ -1,0 +1,25 @@
+# Сначала установим зависимости и склонируем репозиторий в образе Alpine Linux
+FROM node:21-alpine as frontend
+
+RUN apk update && apk add --no-cache git
+
+# Клонирование репозитория
+RUN git clone https://github.com/KeraLLenarium/marketplace_front_test.git /app
+
+# Переход в директорию с кодом проекта
+WORKDIR /app
+
+# Устанавливаем зависимости и собираем проект
+RUN npm install vite
+RUN npm run build
+
+# Затем соберем финальный образ с Nginx
+FROM nginx
+
+# Копируем собранные файлы из предыдущего образа в Nginx
+COPY --from=frontend /app/dist /usr/share/nginx/html
+
+# Необходимо ли изменить права доступа к файлам, зависит от вашего проекта. Можете пропустить этот шаг, если не требуется.
+RUN chmod -R 755 /usr/share/nginx/html/*
+
+EXPOSE 80
